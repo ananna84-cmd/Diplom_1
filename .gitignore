@@ -5,3 +5,4 @@ __pycache__/
 .coverage
 tests/temp
 *.pyc
+.coveragerc
