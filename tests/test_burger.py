@@ -5,25 +5,25 @@ from praktikum.burger import Burger
 
 
 # Проверки "__init__"
-# Проверка: после инициализации булочка должна отсутствовать (None)
-def test_burger_bun_is_none_after_init():
+# Инициализация без аргументов → булочка равна None
+def test_init_no_args_bun_is_none():
     burger = Burger()
     assert burger.bun is None
 
-# Проверка: список ингредиентов пустой после создания объекта
-def test_burger_ingredients_list_is_empty():
+# Инициализация без аргументов → список ингредиентов пустой
+def test_init_no_args_ingredients_list_empty():
     burger = Burger()
     assert len(burger.ingredients) == 0
 
 # Проверки "set_buns"
-# Проверка: set_buns корректно присваивает булочку
-def test_set_buns_assigns_bun_correctly(empty_burger):
+# set_buns принимает булочку → в атрибуте bun оказывается эта булочка
+def test_set_buns_bun_assigned(empty_burger):
     mock_bun = Mock()
     empty_burger.set_buns(mock_bun)
     assert empty_burger.bun is mock_bun
 
-# Проверка: set_buns сохраняет последнюю добавленную булочку (перезаписывает предыдущую)
-def test_set_buns_overwrites_previous_bun(empty_burger):
+# set_buns вызывается дважды → сохраняется только последняя булочка
+def test_set_buns_second_bun_overwrites_first(empty_burger):
     old_bun = Mock()
     new_bun = Mock()
     empty_burger.set_buns(old_bun)
@@ -31,39 +31,46 @@ def test_set_buns_overwrites_previous_bun(empty_burger):
     assert empty_burger.bun is new_bun
 
 # Проверки "add_ingredient"
-# Проверка: после добавления длина списка ингредиентов увеличивается на указанное количество
-@pytest.mark.parametrize("count", [1, 3])
-def test_add_ingredient_increases_count(empty_burger, count):
+# Добавляем N ингредиентов → длина списка увеличивается на N
+@pytest.mark.parametrize(
+    "count",
+    [1, 3],
+    ids=["add_1_len_increased", "add_3_len_increased"]
+)
+def test_add_ingredient_count_n_list_length_increased_by_n(empty_burger, count):
     start_len = len(empty_burger.ingredients)
     for _ in range(count):
         empty_burger.add_ingredient(Mock())
     assert len(empty_burger.ingredients) == start_len + count
 
-# Проверка: ингредиент добавляется в конец списка (сохраняется ссылка на переданный объект)
-def test_add_ingredient_adds_exact_object(empty_burger):
+# Добавляем один ингредиент → он становится последним элементом списка
+def test_add_ingredient_single_item_appended_as_last(empty_burger):
     ingredient = Mock()
     empty_burger.add_ingredient(ingredient)
     assert empty_burger.ingredients[-1] is ingredient
 
-# Проверка: ингредиенты добавляются в корректном порядке (порядок вставки сохраняется)
-def test_add_multiple_ingredients_maintains_order(empty_burger):
+# Добавляем несколько ингредиентов → порядок сохраняется
+def test_add_multiple_ingredients_order_preserved(empty_burger):
     ing1, ing2, ing3 = Mock(), Mock(), Mock()
     empty_burger.add_ingredient(ing1)
     empty_burger.add_ingredient(ing2)
     empty_burger.add_ingredient(ing3)
     assert empty_burger.ingredients == [ing1, ing2, ing3]
 
-# Проверка: "move_ingredient"
-# Проверка: move_ingredient перемещает элемент на указанный индекс
-@pytest.mark.parametrize("from_idx,to_idx", [
-    (0, 1), (1, 0), (0, 0), (2, 0), (0, 2),],
-    ids=["shift_forward",
-        "shift_backward",
-        "same_index",
-        "from_end_to_start",
-        "from_start_to_end"]
-    )
-def test_move_ingredient_shifts_element(burger_three_ingredients, from_idx, to_idx):
+# Проверки "move_ingredient"
+@pytest.mark.parametrize(
+    "from_idx,to_idx",
+    [(0, 1), (1, 0), (0, 0), (2, 0), (0, 2)],
+    ids=[
+        "move_0_to_1",
+        "move_1_to_0",
+        "move_same_idx",
+        "move_end_to_start",
+        "move_start_to_end"
+    ]
+)
+# Перемещаем элемент с индекса N на индекс M → порядок списка меняется корректно
+def test_move_ingredient_from_n_to_m_element_placed_at_target_index(burger_three_ingredients, from_idx, to_idx):
     burger, _, _, _, _ = burger_three_ingredients
     original = burger.ingredients[:]
 
@@ -75,39 +82,43 @@ def test_move_ingredient_shifts_element(burger_three_ingredients, from_idx, to_i
 
     assert burger.ingredients == expected
 
-# Проверка: неверный индекс источника вызывает ошибку IndexError
-def test_move_ingredient_raises_on_invalid_source_index(burger_three_ingredients):
+# Передаём неверный индекс источника → выбрасывается IndexError
+def test_move_ingredient_invalid_source_index_raises_index_error(burger_three_ingredients):
     burger, _, _, _, _ = burger_three_ingredients
     with pytest.raises(IndexError):
         burger.move_ingredient(99, 0)
 
-# Проверка "remove_ingredient"
-# Проверка: после удаления ингредиента длина списка уменьшается согласно ожидаемому значению
-@pytest.mark.parametrize("remove_idx,expected_len", [
-    (0, 2), (1, 2), (2, 2)
-    ],
-    ids=["remove_first", "remove_middle", "remove_last"]
+# Проверки "remove_ingredient"
+# Удаляем ингредиент по индексу N → длина списка становится M
+@pytest.mark.parametrize(
+    "remove_idx,expected_len",
+    [(0, 2), (1, 2), (2, 2)],
+    ids=["remove_first_len_2", "remove_middle_len_2", "remove_last_len_2"]
 )
-def test_remove_ingredient_decreases_count(burger_three_ingredients, remove_idx, expected_len):
+def test_remove_ingredient_index_n_length_m(burger_three_ingredients, remove_idx, expected_len):
     burger, _, _, _, _ = burger_three_ingredients
     burger.remove_ingredient(remove_idx)
     assert len(burger.ingredients) == expected_len
 
-# Проверка: при попытке удаления из пустого списка вызывает ошибка IndexError
+# Пытаемся удалить из пустого списка → выбрасывается IndexError
 def test_remove_from_empty_list_raises_index_error(empty_burger):
     with pytest.raises(IndexError):
         empty_burger.remove_ingredient(0)
 
-# Проверка: при неверном индексе выбрасывается IndexError
-def test_remove_invalid_index_raises_error(burger_three_ingredients):
+# Передаём неверный индекс → выбрасывается IndexError
+def test_remove_invalid_index_raises_index_error(burger_three_ingredients):
     burger, _, _, _, _ = burger_three_ingredients
     with pytest.raises(IndexError):
         burger.remove_ingredient(99)
 
-# Проверка "get_price()"
-# Проверка: get_price корректно рассчитывает стоимость бургера с разным количеством ингредиентов
-@pytest.mark.parametrize("ing_count,expected_price", [(0, 200), (1, 220), (3, 340)])
-def test_get_price_parametrized(empty_burger, ing_count, expected_price):
+# Проверки "get_price()"
+# При N ингредиентах get_price возвращает цену X
+@pytest.mark.parametrize(
+    "ing_count,expected_price",
+    [(0, 200), (1, 220), (3, 340)],
+    ids=["price_0_ing_200", "price_1_ing_220", "price_3_ing_340"]
+)
+def test_get_price_ingredients_count_n_returns_price_x(empty_burger, ing_count, expected_price):
     bun = Mock()
     bun.get_price.return_value = 100
     empty_burger.set_buns(bun)
@@ -120,10 +131,14 @@ def test_get_price_parametrized(empty_burger, ing_count, expected_price):
 
     assert empty_burger.get_price() == expected_price
 
-# Проверка "get_receipt()"
-# Проверка: get_receipt формирует корректный текст чека с ингредиентами и итоговой ценой
-@pytest.mark.parametrize("ing_count", [0, 1, 3])
-def test_get_receipt_format_and_price(empty_burger, ing_count):
+# Проверки "get_receipt()"
+# При N ингредиентах get_receipt возвращает строку ожидаемого формата
+@pytest.mark.parametrize(
+    "ing_count",
+    [0, 1, 3],
+    ids=["receipt_0_ing", "receipt_1_ing", "receipt_3_ing"]
+)
+def test_get_receipt_ingredients_count_n_returns_expected_format(empty_burger, ing_count):
     bun = Mock()
     bun.get_name.return_value = "Булочка"
     bun.get_price.return_value = 100
@@ -148,7 +163,6 @@ def test_get_receipt_format_and_price(empty_burger, ing_count):
    
     lines = []
     lines.append(f"(==== {bun.get_name()} ====)")
-    # Ингредиенты
     for name, typ in ings:
         lines.append(f"= {typ.lower()} {name} =")
     lines.append(f"(==== {bun.get_name()} ====)\n")
@@ -159,13 +173,13 @@ def test_get_receipt_format_and_price(empty_burger, ing_count):
 
     assert receipt == expected_string
 
-# Проверка: get_price выбрасывает AttributeError, если булочка не установлена
-def test_get_price_raises_attribute_error_if_bun_is_none(empty_burger):
+# Проверки ошибок при отсутствии булочки
+# Булочка не установлена → get_price выбрасывает AttributeError
+def test_get_price_bun_none_raises_attribute_error(empty_burger):
     with pytest.raises(AttributeError):
         empty_burger.get_price()
 
-# Проверка: get_receipt выбрасывает AttributeError, если булочка не установлена
-def test_get_receipt_raises_attribute_error_if_bun_is_none(empty_burger):
+# Булочка не установлена → get_receipt выбрасывает AttributeError
+def test_get_receipt_bun_none_raises_attribute_error(empty_burger):
     with pytest.raises(AttributeError):
         empty_burger.get_receipt()
-        
