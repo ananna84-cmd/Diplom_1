@@ -79,7 +79,7 @@ class TestBurgerMoveIngredient:
         with pytest.raises(IndexError):
             burger.move_ingredient(99, 0)
 
-class TestBurgerRemoveIngredients:
+class TestBurgerRemoveIngredient:
     @pytest.mark.parametrize(
         "remove_idx,expected_len",
         [(0, 2), (1, 2), (2, 2)],
