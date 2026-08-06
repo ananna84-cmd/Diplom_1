@@ -1,0 +1,8 @@
+praktikum/temp
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+tests/temp
+*.pyc
+.coveragerc
